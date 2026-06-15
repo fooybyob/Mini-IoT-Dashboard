@@ -5,7 +5,7 @@
 <h1>Live Sensor Readings</h1>
 <ul id="list"></ul>
 <script>
-    const ws = new WebSocket("ws://localhost:7000/live");
+    const ws = new WebSocket("ws://localhost:7070/live");
     ws.onmessage = (event) => {
       const r = JSON.parse(event.data);
       const li = document.createElement("li");

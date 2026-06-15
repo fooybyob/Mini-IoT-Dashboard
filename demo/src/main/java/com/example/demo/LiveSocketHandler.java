@@ -6,6 +6,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+@Component
 public class LiveSocketHandler extends TextWebSocketHandler {
     private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
 
