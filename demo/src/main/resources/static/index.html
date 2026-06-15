@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head><title>Sensor Dashboard</title></head>
+<body style="font-family: sans-serif; padding: 2rem;">
+<h1>Live Sensor Readings</h1>
+<ul id="list"></ul>
+<script>
+    const ws = new WebSocket("ws://localhost:7000/live");
+    ws.onmessage = (event) => {
+      const r = JSON.parse(event.data);
+      const li = document.createElement("li");
+      li.textContent = `${r.sensorId}: ${r.temperature}°C`;
+      document.getElementById("list").prepend(li);
+    };
+</script>
+</body>
+</html>
