@@ -1,13 +1,18 @@
 package com.example.demo;
 
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.core.MessageProducer;
 import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory;
 import org.springframework.integration.mqtt.core.MqttPahoClientFactory;
 import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannelAdapter;
+import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
+import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.MessageHandler;
 
 @Configuration
 public class MqttConfig {
@@ -29,5 +34,26 @@ public class MqttConfig {
         channel.subscribe(handler::handle);
         adapter.setOutputChannel(channel);
         return adapter;
+    }
+
+    @Bean
+    public MessageChannel outboundChannel() {
+        return new DirectChannel();
+    }
+
+    @Bean
+    public MqttPahoMessageHandler outboundHandler() {
+        MqttPahoMessageHandler handler =
+                new MqttPahoMessageHandler("sensor-backend-pub", mqttClientFactory());
+        handler.setAsync(true);
+        handler.setDefaultTopic("sensors/sensor-1/command");
+        return handler;
+    }
+
+    @Bean
+    public Object wireOutbound(@Qualifier("outboundChannel") DirectChannel channel,
+                               MqttPahoMessageHandler handler) {
+        channel.subscribe(handler);     // manually connect — no @ServiceActivator
+        return new Object();
     }
 }

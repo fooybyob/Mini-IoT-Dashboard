@@ -11,6 +11,8 @@ public class MqttHandler {
     private final ReadingService readingService;
     private final ObjectMapper mapper = new ObjectMapper();
     private final LiveSocketHandler socket;
+
+
     public MqttHandler(ReadingService readingService,LiveSocketHandler socket) {
         this.readingService=readingService;
         this.socket = socket;
