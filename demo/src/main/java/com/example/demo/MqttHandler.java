@@ -8,11 +8,11 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class MqttHandler {
-    private final ReadingRepository repo;
+    private final ReadingService readingService;
     private final ObjectMapper mapper = new ObjectMapper();
     private final LiveSocketHandler socket;
-    public MqttHandler(ReadingRepository repo,LiveSocketHandler socket) {
-        this.repo = repo;
+    public MqttHandler(ReadingService readingService,LiveSocketHandler socket) {
+        this.readingService=readingService;
         this.socket = socket;
     }
 
@@ -20,7 +20,7 @@ public class MqttHandler {
         try {
             String payload = (String) message.getPayload();
             Reading reading = mapper.readValue(payload, Reading.class);
-            repo.save(reading);
+            readingService.saveReading(reading);
             socket.broadcast(payload);
             System.out.println("Saved reading:" + reading.getTemperature() + "°C");
         } catch (Exception e) {
