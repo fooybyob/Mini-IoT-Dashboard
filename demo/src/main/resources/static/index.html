@@ -1,20 +1,459 @@
 <!DOCTYPE html>
-<html>
+
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sensor Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensor Telemetry Dashboard</title>
+
+    <style>
+        :root {
+            --bg: #0a0e14;
+            --panel: #121822;
+            --panel-edge: #1e2735;
+            --grid-line: #161d28;
+
+            --text: #e3e8ef;
+            --text-dim: #6b7888;
+            --text-faint: #455064;
+
+            --cool: #3fb8d4;
+            --cool-glow: rgba(63,184,212,0.15);
+
+            --warm: #f0883e;
+
+            --hot: #f25555;
+            --hot-glow: rgba(242,85,85,0.18);
+
+            --mono: "SF Mono","JetBrains Mono","Fira Code",ui-monospace,monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            background-image:
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 32px 32px;
+
+            color: var(--text);
+            font-family: var(--mono);
+
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .masthead {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 1rem;
+
+            border-bottom: 1px solid var(--panel-edge);
+
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .masthead h1 {
+            font-size: 1.1rem;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+        }
+
+        .sub {
+            margin-top: 0.35rem;
+            color: var(--text-faint);
+            font-size: 0.7rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            font-size: .75rem;
+            color: var(--text-dim);
+            letter-spacing: .15em;
+            text-transform: uppercase;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status.live .dot {
+            background: var(--cool);
+            animation: pulse 2s infinite;
+        }
+
+        .status.offline .dot {
+            background: var(--hot);
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(63,184,212,.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 8px rgba(63,184,212,0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(63,184,212,0);
+            }
+        }
+
+        .tiles {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px,1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .tile {
+            background: var(--panel);
+            border: 1px solid var(--panel-edge);
+            border-left: 3px solid var(--text-faint);
+            border-radius: 4px;
+            padding: 1.2rem;
+        }
+
+        .tile.cool {
+            border-left-color: var(--cool);
+            box-shadow: -4px 0 16px -8px var(--cool-glow);
+        }
+
+        .tile.warm {
+            border-left-color: var(--warm);
+        }
+
+        .tile.hot {
+            border-left-color: var(--hot);
+            box-shadow: -4px 0 18px -6px var(--hot-glow);
+        }
+
+        .id {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            color: var(--text-dim);
+            font-size: .72rem;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+        }
+
+        .flag {
+            font-size: .6rem;
+            opacity: 0;
+        }
+
+        .tile.hot .flag {
+            opacity: 1;
+            color: var(--hot);
+        }
+
+        .value {
+            font-size: 2.6rem;
+            font-weight: 600;
+            margin-top: .7rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .tile.cool .value {
+            color: var(--cool);
+        }
+
+        .tile.warm .value {
+            color: var(--warm);
+        }
+
+        .tile.hot .value {
+            color: var(--hot);
+        }
+
+        .unit {
+            font-size: 1rem;
+            color: var(--text-faint);
+        }
+
+        .meta {
+            margin-top: .6rem;
+            color: var(--text-faint);
+            font-size: .68rem;
+        }
+
+        .empty-hint {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 2rem;
+            border: 1px dashed var(--panel-edge);
+            color: var(--text-faint);
+        }
+
+        .log-head {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+
+            color: var(--text-dim);
+            font-size: .72rem;
+            letter-spacing: .2em;
+            text-transform: uppercase;
+
+            margin-bottom: .9rem;
+        }
+
+        .log-head::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--panel-edge);
+        }
+
+        .log {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: .6rem;
+        }
+
+        .log li {
+            background: var(--panel);
+            border: 1px solid var(--panel-edge);
+            border-left: 3px solid var(--text-faint);
+
+            border-radius: 4px;
+            padding: .9rem 1rem;
+
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .log li.cool {
+            border-left-color: var(--cool);
+        }
+
+        .log li.warm {
+            border-left-color: var(--warm);
+        }
+
+        .log li.hot {
+            border-left-color: var(--hot);
+        }
+
+        .time {
+            color: var(--text-faint);
+            white-space: nowrap;
+        }
+
+        @media (max-width:700px) {
+
+            body {
+                padding: 1rem;
+            }
+
+            .value {
+                font-size: 2rem;
+            }
+
+            .masthead {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .log li {
+                flex-direction: column;
+            }
+        }
+    </style>
+
 </head>
-<body style="font-family: sans-serif; padding: 2rem;">
-<h1>Live Sensor Readings</h1>
-<ul id="list"></ul>
+
+<body>
+
+<header class="masthead">
+    <div>
+        <h1>Sensor Telemetry</h1>
+        <div class="sub">Real-Time Monitoring Interface</div>
+    </div>
+
+    ```
+    <div class="status offline" id="connectionStatus">
+        <span class="dot"></span>
+        <span id="statusText">Connecting...</span>
+    </div>
+    ```
+
+</header>
+
+<section class="tiles" id="tiles">
+    <div class="empty-hint">
+        Waiting for sensor data...
+    </div>
+</section>
+
+<div class="log-head">Event Log</div>
+
+<ul class="log" id="log"></ul>
+
 <script>
+    const sensors = {};
+
+    function getLevel(temp) {
+        if (temp >= 35) return "hot";
+        if (temp >= 23) return "warm";
+        return "cool";
+    }
+
+    function formatTimestamp(timestamp) {
+        return new Date(timestamp).toLocaleString();
+    }
+
+    function renderTiles() {
+
+        const container = document.getElementById("tiles");
+        const sensorList = Object.values(sensors);
+
+        if (sensorList.length === 0) {
+            container.innerHTML = `
+                <div class="empty-hint">
+                    Waiting for sensor data...
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = "";
+
+        sensorList
+            .sort((a, b) => a.sensorId.localeCompare(b.sensorId))
+            .forEach(sensor => {
+
+                const level = getLevel(sensor.temperature);
+
+                const tile = document.createElement("div");
+                tile.className = `tile ${level}`;
+
+                tile.innerHTML = `
+                    <div class="id">
+                        <span>${sensor.sensorId}</span>
+                        <span class="flag">
+                            ${level === "hot" ? "CRITICAL" : ""}
+                        </span>
+                    </div>
+
+                    <div class="value">
+                        ${Number(sensor.temperature).toFixed(1)}
+                        <span class="unit">°C</span>
+                    </div>
+
+                    <div class="meta">
+                        Updated: ${formatTimestamp(sensor.timestamp)}
+                    </div>
+                `;
+
+                container.appendChild(tile);
+            });
+    }
+
+    function addLog(message, level) {
+
+        const log = document.getElementById("log");
+
+        const item = document.createElement("li");
+        item.className = level;
+
+        item.innerHTML = `
+            <span>${message}</span>
+            <span class="time">
+                ${new Date().toLocaleTimeString()}
+            </span>
+        `;
+
+        log.prepend(item);
+
+        while (log.children.length > 50) {
+            log.removeChild(log.lastElementChild);
+        }
+    }
+
+    const statusBox = document.getElementById("connectionStatus");
+    const statusText = document.getElementById("statusText");
+
     const ws = new WebSocket("ws://localhost:7070/live");
+
+    ws.onopen = () => {
+
+        statusBox.classList.remove("offline");
+        statusBox.classList.add("live");
+
+        statusText.textContent = "Live Feed";
+
+        addLog("Connected to telemetry stream", "cool");
+    };
+
     ws.onmessage = (event) => {
-      const r = JSON.parse(event.data);
-      const li = document.createElement("li");
-      li.textContent = `${r.sensorId}: ${r.temperature}°C  (TIMESTAMP:${r.timestamp})`;
-      document.getElementById("list").prepend(li);
+
+        try {
+
+            const r = JSON.parse(event.data);
+
+            sensors[r.sensorId] = {
+                sensorId: r.sensorId,
+                temperature: Number(r.temperature),
+                timestamp: r.timestamp
+            };
+
+            const level = getLevel(r.temperature);
+
+            addLog(
+                `${r.sensorId} reported ${Number(r.temperature).toFixed(1)}°C`,
+                level
+            );
+
+            renderTiles();
+
+        } catch (error) {
+
+            console.error("Invalid message:", error);
+        }
+    };
+
+    ws.onclose = () => {
+
+        statusBox.classList.remove("live");
+        statusBox.classList.add("offline");
+
+        statusText.textContent = "Disconnected";
+
+        addLog("Connection closed", "hot");
+    };
+
+    ws.onerror = (error) => {
+
+        console.error(error);
+
+        statusBox.classList.remove("live");
+        statusBox.classList.add("offline");
+
+        statusText.textContent = "Connection Error";
+
+        addLog("WebSocket error", "hot");
     };
 </script>
+
 </body>
 </html>
