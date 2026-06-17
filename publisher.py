@@ -1,3 +1,6 @@
+
+
+
 import paho.mqtt.client as mqtt
 import json, time, random,sys
 
@@ -24,7 +27,8 @@ while True:
     payload = json.dumps({
         "sensorId": sensor,
         "temperature": round(random.uniform(18, 40), 1),
-        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "timestampLong": int(time.time() * 1000)
     })
     c.publish("sensors/"+sensor+"/temperature", payload)
     print("sent", payload)

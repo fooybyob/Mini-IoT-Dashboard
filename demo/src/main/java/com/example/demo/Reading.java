@@ -12,6 +12,7 @@ public class Reading {
     private String sensorId;
     private double temperature;
     private String timestamp;
+    private long timestampLong;
 
 
 
@@ -45,5 +46,12 @@ public class Reading {
 
     public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public long getTimestampLong() {
+        return timestampLong;
+    }
+    public void setTimestampLong(long timestampLong) {
+        this.timestampLong = timestampLong;
     }
 }

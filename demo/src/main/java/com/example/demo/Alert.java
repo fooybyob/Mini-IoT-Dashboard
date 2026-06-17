@@ -16,6 +16,7 @@ public class Alert {
     private double temperature;
     private String timestamp;
 
+
     public long getId() {
         return id;
     }

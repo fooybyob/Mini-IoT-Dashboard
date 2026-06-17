@@ -14,6 +14,7 @@ public class Device {
     private String sensorId;
     private Status status;
     private String lastSeen;
+    private Long lastSeenLong;
     private String boundWorkspace;
 
 
@@ -59,6 +60,14 @@ public class Device {
 
     public enum Status {
         ONLINE,OFFLINE
+    }
+
+    public Long getLastSeenLong() {
+        return lastSeenLong;
+    }
+
+    public void setLastSeenLong(Long lastSeenLong) {
+        this.lastSeenLong = lastSeenLong;
     }
 }
 

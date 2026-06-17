@@ -1,5 +1,6 @@
 package com.example.demo;
 
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -9,13 +10,13 @@ import java.util.Optional;
 public class ReadingService {
     private final ReadingRepository repo;
     private final AlertRepository alertRepo;
-    private final DeviceRepository deviceRepo;
+    private final DeviceService deviceService;
     private static final double THRESHOLD = 23.0;
 
-    public ReadingService(ReadingRepository repo, AlertRepository alertRepo,DeviceRepository deviceRepo) {
+    public ReadingService(ReadingRepository repo, AlertRepository alertRepo,  DeviceService deviceService) {
         this.repo=repo;
         this.alertRepo=alertRepo;
-        this.deviceRepo=deviceRepo;
+        this.deviceService=deviceService;
     }
 
     public Reading saveReading(Reading reading) {
@@ -27,29 +28,10 @@ public class ReadingService {
             alertRepo.save(alert);
 
         }
-        touch(reading);
+        deviceService.touch(reading);
         return repo.save(reading);
     }
 
-
-    private void touch(Reading reading) {
-        Optional<Device> device = deviceRepo.findBySensorId(reading.getSensorId());
-        if(device.isEmpty()){
-            Device device_new = new Device();
-            device_new.setSensorId(reading.getSensorId());
-            device_new.setLastSeen(reading.getTimestamp());
-            device_new.setBoundWorkspace("default");
-            device_new.setStatus(Device.Status.ONLINE);
-            deviceRepo.save(device_new);
-        }
-        else{
-            Device d = device.get();
-            d.setLastSeen(reading.getTimestamp());
-            d.setStatus(Device.Status.ONLINE);
-            deviceRepo.save(d);
-
-        }
-    }
 
 
 
