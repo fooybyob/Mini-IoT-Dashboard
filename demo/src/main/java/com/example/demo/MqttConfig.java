@@ -11,6 +11,7 @@ import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory;
 import org.springframework.integration.mqtt.core.MqttPahoClientFactory;
 import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannelAdapter;
 import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 
@@ -32,6 +33,15 @@ public class MqttConfig {
                 new MqttPahoMessageDrivenChannelAdapter("sensor-backend", mqttClientFactory(), "sensors/+/temperature");
         DirectChannel channel = new DirectChannel();
         channel.subscribe(handler::handle);
+        adapter.setOutputChannel(channel);
+        return adapter;
+    }
+
+    @Bean
+    public MessageProducer replyInbound(CommandReplyHandler replyHandler) {
+        MqttPahoMessageDrivenChannelAdapter adapter=new MqttPahoMessageDrivenChannelAdapter("sensor-backend-reply", mqttClientFactory(), "sensors/+/services_reply");
+        DirectChannel channel = new DirectChannel();
+        channel.subscribe(replyHandler::handleReply);
         adapter.setOutputChannel(channel);
         return adapter;
     }
