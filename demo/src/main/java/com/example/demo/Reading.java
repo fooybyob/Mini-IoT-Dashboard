@@ -19,6 +19,10 @@ public class Reading {
         this.id = id;
     }
 
+    public long getId() {
+        return id;
+    }
+
     public String getSensorId() {
         return sensorId;
     }
